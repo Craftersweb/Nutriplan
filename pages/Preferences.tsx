@@ -107,7 +107,7 @@ const getEmojiForDiet = (pref: DietPreference) => {
     case DietPreference.OMNIVORE: return '🍗';
     case DietPreference.VEGETARIAN: return '🥕';
     case DietPreference.VEGAN: return '🌿';
-    case DietPreference.KETO: return '🥩'; // FIX: Removed avocado
+    case DietPreference.KETO: return '🥩'; 
     case DietPreference.PALEO: return '🍖';
     case DietPreference.GLUTEN_FREE: return '🌾';
     default: return '🍽️';
