@@ -8,6 +8,7 @@ import Preferences from './pages/Preferences';
 import ShoppingList from './pages/ShoppingList';
 import Subscription from './pages/Subscription';
 import HowItWorks from './pages/HowItWorks';
+import Onboarding from './pages/Onboarding';
 import Navbar from './components/Navbar';
 
 interface AppContextType {
@@ -34,12 +35,12 @@ export const useApp = () => {
 
 interface LocalUserDB extends User {
   password?: string;
+  hasSeenTutorial?: boolean;
 }
 
 const App: React.FC = () => {
-  const [view, setView] = useState<'landing' | 'auth' | 'dashboard' | 'preferences' | 'shopping' | 'subscription' | 'how-it-works'>('landing');
+  const [view, setView] = useState<'landing' | 'auth' | 'dashboard' | 'preferences' | 'shopping' | 'subscription' | 'how-it-works' | 'onboarding'>('landing');
   
-  // Safe JSON parse helper
   const safeParse = (key: string, fallback: any) => {
     try {
       const item = localStorage.getItem(key);
@@ -69,21 +70,41 @@ const App: React.FC = () => {
 
   useEffect(() => {
     localStorage.setItem('nutriplan_auth', JSON.stringify(authState));
+    
     if (authState.isAuthenticated && (view === 'landing' || view === 'auth')) {
         setView('dashboard');
     }
-  }, [authState, view]);
+  }, [authState.isAuthenticated]);
 
   const getUsersDB = (): LocalUserDB[] => safeParse('nutriplan_users_db', []);
+
+  const calculateAge = (birthDate: string): number => {
+    const today = new Date();
+    const birth = new Date(birthDate);
+    let age = today.getFullYear() - birth.getFullYear();
+    const m = today.getMonth() - birth.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) {
+        age--;
+    }
+    return age;
+  };
 
   const signup = async (name: string, email: string, pass: string, birthDate: string) => {
     setAuthState(prev => ({ ...prev, isLoading: true }));
     await new Promise(resolve => setTimeout(resolve, 1000));
     
+    // 1. Vérification de l'âge (18 ans min)
+    const age = calculateAge(birthDate);
+    if (age < 18) {
+      setAuthState(prev => ({ ...prev, isLoading: false }));
+      return { success: false, message: "Vous devez avoir au moins 18 ans pour vous inscrire." };
+    }
+
+    // 2. Vérification si déjà inscrit
     const db = getUsersDB();
     if (db.some(u => u.email.toLowerCase() === email.toLowerCase())) {
       setAuthState(prev => ({ ...prev, isLoading: false }));
-      return { success: false, message: "Cet email est déjà utilisé." };
+      return { success: false, message: "Cet email est déjà associé à un compte." };
     }
 
     const newUser: LocalUserDB = {
@@ -94,7 +115,8 @@ const App: React.FC = () => {
       birthDate,
       diet: DietPreference.OMNIVORE,
       allergies: [],
-      subscriptionType: 'free'
+      subscriptionType: 'free',
+      hasSeenTutorial: false
     };
 
     localStorage.setItem('nutriplan_users_db', JSON.stringify([...db, newUser]));
@@ -106,7 +128,8 @@ const App: React.FC = () => {
       isAuthenticated: true,
       isLoading: false
     });
-    setView('dashboard');
+    
+    setView('onboarding');
     return { success: true };
   };
 
@@ -134,6 +157,7 @@ const App: React.FC = () => {
       isAuthenticated: true,
       isLoading: false
     });
+    
     setView('dashboard');
     return { success: true };
   };
@@ -157,6 +181,7 @@ const App: React.FC = () => {
       isAuthenticated: true,
       isLoading: false
     });
+    
     setView('dashboard');
   };
 
@@ -193,12 +218,13 @@ const App: React.FC = () => {
   const renderView = () => {
     switch (view) {
       case 'landing': return <LandingPage onGetStarted={() => setView('auth')} onHowItWorks={() => setView('how-it-works')} />;
-      case 'auth': return <Auth onAuthSuccess={() => setView('dashboard')} />;
+      case 'auth': return <Auth onAuthSuccess={() => {}} />;
       case 'dashboard': return <Dashboard />;
       case 'preferences': return <Preferences />;
       case 'shopping': return <ShoppingList />;
       case 'subscription': return <Subscription />;
       case 'how-it-works': return <HowItWorks />;
+      case 'onboarding': return <Onboarding onComplete={() => setView('dashboard')} />;
       default: return <LandingPage onGetStarted={() => setView('auth')} onHowItWorks={() => setView('how-it-works')} />;
     }
   };
@@ -210,7 +236,7 @@ const App: React.FC = () => {
       savedPlans, saveCurrentPlan, setView
     }}>
       <div className="min-h-screen flex flex-col bg-slate-50">
-        {(authState.isAuthenticated || view !== 'landing') && <Navbar currentView={view} setView={setView} />}
+        {(authState.isAuthenticated || view !== 'landing') && view !== 'onboarding' && view !== 'auth' && <Navbar currentView={view} setView={setView} />}
         <main className="flex-grow">
           {renderView()}
         </main>

@@ -1,11 +1,9 @@
 
 import React, { useState } from 'react';
-// Fix: useApp is the exported hook from App.tsx, not useAuth
 import { useApp } from '../App';
 import { DietPreference } from '../types';
 
 const Preferences: React.FC = () => {
-  // Fix: use useApp() to access authState and updateUser
   const { authState, updateUser } = useApp();
   const [diet, setDiet] = useState<DietPreference>(authState.user?.diet || DietPreference.OMNIVORE);
   const [allergyInput, setAllergyInput] = useState('');
@@ -109,8 +107,8 @@ const getEmojiForDiet = (pref: DietPreference) => {
     case DietPreference.OMNIVORE: return '🍗';
     case DietPreference.VEGETARIAN: return '🥕';
     case DietPreference.VEGAN: return '🌿';
-    case DietPreference.KETO: return '🥑';
-    case DietPreference.PALEO: return '🥩';
+    case DietPreference.KETO: return '🥩'; // FIX: Removed avocado
+    case DietPreference.PALEO: return '🍖';
     case DietPreference.GLUTEN_FREE: return '🌾';
     default: return '🍽️';
   }

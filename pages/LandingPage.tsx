@@ -43,17 +43,6 @@ const LandingPage: React.FC<LandingProps> = ({ onGetStarted, onHowItWorks }) => 
                 Le Blog
               </button>
             </div>
-            
-            <div className="mt-16 flex items-center gap-6 justify-center lg:justify-start">
-              <div className="flex -space-x-3">
-                {[1,2,3,4].map(i => (
-                  <img key={i} src={`https://picsum.photos/seed/${i+100}/80/80`} className="w-12 h-12 rounded-full border-4 border-white shadow-lg" alt="User" />
-                ))}
-              </div>
-              <p className="text-xs font-bold text-slate-400 uppercase tracking-[0.2em]">
-                <span className="text-slate-900">+12,000</span> foyers optimisés
-              </p>
-            </div>
           </div>
           
           <div className="flex-1 relative">
@@ -64,23 +53,13 @@ const LandingPage: React.FC<LandingProps> = ({ onGetStarted, onHowItWorks }) => 
                 className="w-full rounded-[60px] shadow-2xl border-[16px] border-white transform rotate-3 hover:rotate-0 transition-all duration-700" 
                 alt="Plat Healthy" 
               />
-              {/* Floating Badge */}
-              <div className="absolute -bottom-10 -left-10 bg-white p-6 rounded-[32px] shadow-2xl border border-slate-100 animate-bounce duration-[3000ms]">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-emerald-50 rounded-2xl flex items-center justify-center text-2xl">🥑</div>
-                  <div>
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Score Nutrition</p>
-                    <p className="text-xl font-black text-slate-900 tracking-tighter">98/100</p>
-                  </div>
-                </div>
-              </div>
             </div>
           </div>
         </div>
       </section>
 
       {/* Features Grid */}
-      <section className="py-24 bg-white px-6">
+      <section className="py-24 bg-white px-6 border-t border-slate-50">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-20">
             <h2 className="text-4xl lg:text-5xl font-black text-slate-900 tracking-tighter mb-4">Pourquoi choisir Nutriplan ?</h2>
