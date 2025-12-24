@@ -97,3 +97,4 @@ const FeatureCard = ({ icon, title, description }: { icon: string, title: string
 );
 
 export default LandingPage;
+
