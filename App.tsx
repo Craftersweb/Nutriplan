@@ -7,19 +7,21 @@ import Auth from './pages/Auth';
 import Preferences from './pages/Preferences';
 import ShoppingList from './pages/ShoppingList';
 import Subscription from './pages/Subscription';
+import HowItWorks from './pages/HowItWorks';
 import Navbar from './components/Navbar';
 
 interface AppContextType {
   authState: AuthState;
   login: (email: string, pass: string) => Promise<{success: boolean, message?: string}>;
   signup: (name: string, email: string, pass: string, birthDate: string) => Promise<{success: boolean, message?: string}>;
-  socialLogin: (provider: 'google' | 'apple') => Promise<void>;
+  handleGoogleSuccess: (userData: any) => void;
   logout: () => void;
   updateUser: (data: Partial<User>) => void;
   currentMealPlan: DayPlan[] | null;
   setCurrentMealPlan: (plan: DayPlan[] | null) => void;
   savedPlans: SavedPlan[];
   saveCurrentPlan: (name: string) => void;
+  setView: (v: any) => void;
 }
 
 const AppContext = createContext<AppContextType | null>(null);
@@ -37,7 +39,7 @@ interface LocalUserDB extends User {
 }
 
 const App: React.FC = () => {
-  const [view, setView] = useState<'landing' | 'auth' | 'dashboard' | 'preferences' | 'shopping' | 'subscription'>('landing');
+  const [view, setView] = useState<'landing' | 'auth' | 'dashboard' | 'preferences' | 'shopping' | 'subscription' | 'how-it-works'>('landing');
   
   const [currentMealPlan, setCurrentMealPlan] = useState<DayPlan[] | null>(() => {
     const saved = localStorage.getItem('nutriplan_current_plan');
@@ -69,7 +71,10 @@ const App: React.FC = () => {
 
   useEffect(() => {
     localStorage.setItem('nutriplan_auth', JSON.stringify(authState));
-  }, [authState]);
+    if (authState.isAuthenticated && (view === 'landing' || view === 'auth')) {
+        setView('dashboard');
+    }
+  }, [authState, view]);
 
   const getUsersDB = (): LocalUserDB[] => {
     const db = localStorage.getItem('nutriplan_users_db');
@@ -102,7 +107,7 @@ const App: React.FC = () => {
     const { password, ...userSession } = newUser;
     setAuthState({
       user: userSession,
-      token: 'session-' + userSession.id,
+      token: 'sess_' + userSession.id,
       isAuthenticated: true,
       isLoading: false
     });
@@ -119,7 +124,7 @@ const App: React.FC = () => {
 
     if (!foundUser) {
       setAuthState(prev => ({ ...prev, isLoading: false }));
-      return { success: false, message: "Aucun compte trouvé avec cet email." };
+      return { success: false, message: "Compte introuvable." };
     }
 
     if (foundUser.password !== pass) {
@@ -130,7 +135,7 @@ const App: React.FC = () => {
     const { password, ...userSession } = foundUser;
     setAuthState({
       user: userSession,
-      token: 'session-' + userSession.id,
+      token: 'sess_' + userSession.id,
       isAuthenticated: true,
       isLoading: false
     });
@@ -138,23 +143,22 @@ const App: React.FC = () => {
     return { success: true };
   };
 
-  const socialLogin = async (provider: 'google' | 'apple') => {
+  const handleGoogleSuccess = (googleData: any) => {
     setAuthState(prev => ({ ...prev, isLoading: true }));
-    await new Promise(resolve => setTimeout(resolve, 1500));
     
-    const mockUser: User = {
-      id: `social-${provider}-${Math.random().toString(36).substr(2, 5)}`,
-      name: provider === 'google' ? 'Utilisateur Google' : 'Utilisateur Apple',
-      email: `${provider}@social.com`,
-      birthDate: '1995-01-01',
+    const user: User = {
+      id: `google_${googleData.sub}`,
+      name: googleData.name,
+      email: googleData.email,
+      birthDate: '1990-01-01', // Par défaut pour Google login
       diet: DietPreference.OMNIVORE,
       allergies: [],
       subscriptionType: 'free'
     };
 
     setAuthState({
-      user: mockUser,
-      token: 'session-' + mockUser.id,
+      user,
+      token: 'google_token_' + googleData.sub,
       isAuthenticated: true,
       isLoading: false
     });
@@ -193,24 +197,25 @@ const App: React.FC = () => {
 
   const renderView = () => {
     switch (view) {
-      case 'landing': return <LandingPage onGetStarted={() => setView('auth')} />;
+      case 'landing': return <LandingPage onGetStarted={() => setView('auth')} onHowItWorks={() => setView('how-it-works')} />;
       case 'auth': return <Auth onAuthSuccess={() => setView('dashboard')} />;
       case 'dashboard': return <Dashboard />;
       case 'preferences': return <Preferences />;
       case 'shopping': return <ShoppingList />;
       case 'subscription': return <Subscription />;
-      default: return <LandingPage onGetStarted={() => setView('auth')} />;
+      case 'how-it-works': return <HowItWorks />;
+      default: return <LandingPage onGetStarted={() => setView('auth')} onHowItWorks={() => setView('how-it-works')} />;
     }
   };
 
   return (
     <AppContext.Provider value={{ 
-      authState, login, signup, socialLogin, logout, updateUser, 
+      authState, login, signup, handleGoogleSuccess, logout, updateUser, 
       currentMealPlan, setCurrentMealPlan, 
-      savedPlans, saveCurrentPlan 
+      savedPlans, saveCurrentPlan, setView
     }}>
       <div className="min-h-screen flex flex-col bg-slate-50">
-        {authState.isAuthenticated && <Navbar currentView={view} setView={setView} />}
+        {(authState.isAuthenticated || view !== 'landing') && <Navbar currentView={view} setView={setView} />}
         <main className="flex-grow">
           {renderView()}
         </main>

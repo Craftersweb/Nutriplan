@@ -1,79 +1,106 @@
 
 import React from 'react';
 
-const LandingPage: React.FC<{ onGetStarted: () => void }> = ({ onGetStarted }) => {
+interface LandingProps {
+  onGetStarted: () => void;
+  onHowItWorks: () => void;
+}
+
+const LandingPage: React.FC<LandingProps> = ({ onGetStarted, onHowItWorks }) => {
   return (
-    <div className="overflow-hidden">
+    <div className="overflow-hidden bg-slate-50">
       {/* Hero Section */}
-      <section className="relative pt-20 pb-32 px-6">
+      <section className="relative pt-12 lg:pt-24 pb-32 px-6">
         <div className="max-w-7xl mx-auto flex flex-col lg:flex-row items-center gap-16">
-          <div className="flex-1 text-center lg:text-left">
-            <h1 className="text-5xl lg:text-7xl font-bold text-slate-900 leading-tight mb-6">
+          <div className="flex-1 text-center lg:text-left relative z-10">
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-100 rounded-full mb-8">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+              </span>
+              <span className="text-[10px] font-black uppercase tracking-widest text-emerald-700">Propulsé par Gemini 3 Pro</span>
+            </div>
+            
+            <h1 className="text-6xl lg:text-8xl font-black text-slate-900 leading-[0.9] tracking-tighter mb-8">
               Mangez mieux, <br /> 
               <span className="text-emerald-600">sans effort.</span>
             </h1>
-            <p className="text-lg text-slate-600 mb-10 max-w-xl">
-              Nutriplan crée vos menus personnalisés pour la semaine et génère votre liste de courses pour vos supermarchés préférés. Gagnez du temps et restez en bonne santé.
+            <p className="text-xl text-slate-500 mb-12 max-w-xl font-medium leading-relaxed">
+              L'assistant de nutrition intelligent qui compose vos repas et prépare votre panier de courses chez Delhaize ou Colruyt.
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+            
+            <div className="flex flex-col sm:flex-row gap-5 justify-center lg:justify-start">
               <button 
                 onClick={onGetStarted}
-                className="px-8 py-4 bg-emerald-600 text-white font-semibold rounded-2xl hover:bg-emerald-700 transition-all shadow-xl shadow-emerald-200"
+                className="px-12 py-6 bg-emerald-600 text-white font-black rounded-[28px] hover:bg-emerald-700 transition-all shadow-2xl shadow-emerald-200 text-lg uppercase tracking-widest active:scale-95"
               >
-                Démarrer gratuitement
+                C'est parti
               </button>
-              <button className="px-8 py-4 bg-white border border-slate-200 text-slate-900 font-semibold rounded-2xl hover:bg-slate-50 transition-all">
-                Comment ça marche ?
+              <button 
+                onClick={onHowItWorks}
+                className="px-12 py-6 bg-white border-2 border-slate-100 text-slate-900 font-black rounded-[28px] hover:bg-slate-50 transition-all text-lg uppercase tracking-widest shadow-xl shadow-slate-100/50"
+              >
+                Le Blog
               </button>
             </div>
             
-            <div className="mt-12 flex items-center gap-4 justify-center lg:justify-start">
-              <div className="flex -space-x-2">
+            <div className="mt-16 flex items-center gap-6 justify-center lg:justify-start">
+              <div className="flex -space-x-3">
                 {[1,2,3,4].map(i => (
-                  <img key={i} src={`https://picsum.photos/seed/${i+10}/40/40`} className="w-10 h-10 rounded-full border-2 border-white" alt="User" />
+                  <img key={i} src={`https://picsum.photos/seed/${i+100}/80/80`} className="w-12 h-12 rounded-full border-4 border-white shadow-lg" alt="User" />
                 ))}
               </div>
-              <p className="text-sm text-slate-500">
-                <span className="font-bold text-slate-900">+5000</span> utilisateurs belges nous font confiance.
+              <p className="text-xs font-bold text-slate-400 uppercase tracking-[0.2em]">
+                <span className="text-slate-900">+12,000</span> foyers optimisés
               </p>
             </div>
           </div>
           
           <div className="flex-1 relative">
-            <div className="absolute -top-10 -right-10 w-64 h-64 bg-emerald-100 rounded-full blur-3xl opacity-50"></div>
-            <div className="absolute -bottom-10 -left-10 w-64 h-64 bg-blue-100 rounded-full blur-3xl opacity-50"></div>
-            <img 
-              src="https://images.unsplash.com/photo-1547592166-23ac45744acd?auto=format&fit=crop&q=80&w=800" 
-              className="relative z-10 w-full rounded-[40px] shadow-2xl border-8 border-white" 
-              alt="App Mockup" 
-            />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-emerald-100 rounded-full blur-[120px] opacity-40"></div>
+            <div className="relative z-10">
+              <img 
+                src="https://images.unsplash.com/photo-1490645935967-10de6ba17061?auto=format&fit=crop&q=80&w=1200" 
+                className="w-full rounded-[60px] shadow-2xl border-[16px] border-white transform rotate-3 hover:rotate-0 transition-all duration-700" 
+                alt="Plat Healthy" 
+              />
+              {/* Floating Badge */}
+              <div className="absolute -bottom-10 -left-10 bg-white p-6 rounded-[32px] shadow-2xl border border-slate-100 animate-bounce duration-[3000ms]">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-emerald-50 rounded-2xl flex items-center justify-center text-2xl">🥑</div>
+                  <div>
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Score Nutrition</p>
+                    <p className="text-xl font-black text-slate-900 tracking-tighter">98/100</p>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Features */}
+      {/* Features Grid */}
       <section className="py-24 bg-white px-6">
         <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl lg:text-4xl font-bold mb-4">Fonctionnalités Clés</h2>
-            <p className="text-slate-500">Tout ce dont vous avez besoin pour maîtriser votre alimentation.</p>
+          <div className="text-center mb-20">
+            <h2 className="text-4xl lg:text-5xl font-black text-slate-900 tracking-tighter mb-4">Pourquoi choisir Nutriplan ?</h2>
+            <p className="text-slate-400 font-bold uppercase text-[10px] tracking-[0.4em]">Trois piliers pour votre réussite</p>
           </div>
-          
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="grid md:grid-cols-3 gap-12">
             <FeatureCard 
-              icon="🥗"
-              title="Menu Personnalisé"
-              description="Des menus adaptés à votre régime (Keto, Vegan, etc.) générés par IA."
+              icon="🧠"
+              title="Intelligence Artificielle"
+              description="Chaque menu est unique et s'adapte à votre stock et vos envies du moment."
             />
             <FeatureCard 
-              icon="🛒"
-              title="Liste de Courses"
-              description="Exportez votre liste vers Delhaize, Colruyt ou Albert Heijn en un clic."
+              icon="🛍️"
+              title="Sync Supermarché"
+              description="Oubliez la saisie manuelle. Votre panier Delhaize ou Colruyt se remplit en 2 clics."
             />
             <FeatureCard 
-              icon="⏱️"
-              title="Gain de Temps"
-              description="Ne passez plus des heures à chercher quoi manger ou à faire vos courses."
+              icon="📊"
+              title="Budget & Santé"
+              description="Réduisez vos factures de 25% en évitant les achats impulsifs et le gaspillage."
             />
           </div>
         </div>
@@ -83,10 +110,10 @@ const LandingPage: React.FC<{ onGetStarted: () => void }> = ({ onGetStarted }) =
 };
 
 const FeatureCard = ({ icon, title, description }: { icon: string, title: string, description: string }) => (
-  <div className="p-8 rounded-3xl bg-slate-50 border border-slate-100 hover:shadow-lg transition-all">
-    <div className="text-4xl mb-4">{icon}</div>
-    <h3 className="text-xl font-bold mb-2">{title}</h3>
-    <p className="text-slate-600 leading-relaxed">{description}</p>
+  <div className="p-12 rounded-[48px] bg-slate-50 border border-slate-100 hover:shadow-2xl hover:bg-white transition-all group">
+    <div className="text-5xl mb-8 transform group-hover:scale-110 group-hover:-rotate-6 transition-transform">{icon}</div>
+    <h3 className="text-2xl font-black mb-4 text-slate-900 tracking-tight">{title}</h3>
+    <p className="text-slate-500 font-medium leading-relaxed">{description}</p>
   </div>
 );
 

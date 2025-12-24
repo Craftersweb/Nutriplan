@@ -1,6 +1,6 @@
 {
-  "name": "Nutriplan",
-  "description": "Une application de planification nutritionnelle intelligente qui génère des repas personnalisés et des listes de courses automatiques basées sur vos préférences alimentaires.",
+  "name": "Nutriplan - AI Nutrition",
+  "description": "Application intelligente de planification de repas personnalisés avec synchronisation supermarchés.",
   "requestFramePermissions": [
     "camera"
   ]

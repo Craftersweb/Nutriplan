@@ -2,7 +2,8 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { DietPreference, DayPlan, ShoppingListItem } from "../types";
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
+// Fix: Follow guidelines by using process.env.API_KEY directly and ensuring named parameter initialization.
+const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 const MEAL_PROPERTIES = {
   name: { type: Type.STRING },
@@ -57,8 +58,9 @@ export const generateMealPlan = async (
   try {
     const customPrompt = instructions ? `Prend en compte ces instructions : "${instructions}".` : "";
     
+    // Fix: Using gemini-3-pro-preview for complex reasoning task (meal planning with constraints).
     const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
+      model: "gemini-3-pro-preview",
       contents: `Génère un menu pour les jours suivants : ${days.join(', ')}.
                 Régime : ${diet}. 
                 Nombre de personnes : ${servings}. 
@@ -73,6 +75,7 @@ export const generateMealPlan = async (
       }
     });
 
+    // Fix: Access response.text directly as a property (not a method).
     const text = response.text;
     if (!text) return [];
     return JSON.parse(text);
@@ -84,6 +87,7 @@ export const generateMealPlan = async (
 
 export const generateShoppingList = async (mealPlan: any[]): Promise<ShoppingListItem[]> => {
   try {
+    // Fix: Using gemini-3-flash-preview for basic text tasks (shopping list consolidation).
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
       contents: `Crée une liste de courses consolidée pour ces repas (ignore les repas non sélectionnés) : ${JSON.stringify(mealPlan)}`,
@@ -105,6 +109,7 @@ export const generateShoppingList = async (mealPlan: any[]): Promise<ShoppingLis
       }
     });
 
+    // Fix: Access response.text directly as a property.
     const text = response.text;
     if (!text) return [];
     return JSON.parse(text);

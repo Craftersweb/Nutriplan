@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useApp } from '../App';
 
 interface AuthProps {
@@ -13,160 +13,185 @@ const Auth: React.FC<AuthProps> = ({ onAuthSuccess }) => {
   const [birthDate, setBirthDate] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [showConfigHelp, setShowConfigHelp] = useState(false);
   
-  const { login, signup, socialLogin, authState } = useApp();
+  const { login, signup, handleGoogleSuccess, authState } = useApp();
+
+  const GOOGLE_CLIENT_ID = "876547268030-nfgelidbo8p0jvd3hbnp4tosaeng74a0.apps.googleusercontent.com";
+
+  useEffect(() => {
+    const initializeGoogle = () => {
+      const win = window as any;
+      if (win.google) {
+        try {
+          win.google.accounts.id.initialize({
+            client_id: GOOGLE_CLIENT_ID,
+            callback: (response: any) => {
+              const payload = JSON.parse(atob(response.credential.split('.')[1]));
+              handleGoogleSuccess(payload);
+            },
+            cancel_on_tap_outside: false,
+          });
+          
+          win.google.accounts.id.renderButton(
+            document.getElementById("googleBtn"),
+            { 
+              theme: "filled_blue", 
+              size: "large", 
+              width: "100%", 
+              shape: "pill",
+              text: isLogin ? "signin_with" : "signup_with"
+            }
+          );
+        } catch (e) {
+          console.error("Google Auth Init Error:", e);
+          setShowConfigHelp(true);
+        }
+      } else {
+        // Si le script n'est pas chargé après 2 secondes
+        setTimeout(() => {
+          if (!win.google) setShowConfigHelp(true);
+        }, 2000);
+      }
+    };
+
+    const timer = setTimeout(initializeGoogle, 500);
+    return () => clearTimeout(timer);
+  }, [isLogin]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
     if (password.length < 6) {
-      setError("Le mot de passe doit faire au moins 6 caractères.");
+      setError("Le mot de passe doit comporter au moins 6 caractères.");
       return;
     }
 
     if (isLogin) {
       const result = await login(email, password);
-      if (!result.success) {
-        setError(result.message || "Une erreur est survenue.");
-      } else {
-        onAuthSuccess();
-      }
+      if (!result.success) setError(result.message || "Identifiants invalides.");
+      else onAuthSuccess();
     } else {
-      if (!name.trim()) {
-        setError("Veuillez entrer votre nom.");
-        return;
-      }
-      if (!birthDate) {
-        setError("Veuillez sélectionner votre date de naissance.");
+      if (!name.trim() || !birthDate) {
+        setError("Tous les champs sont requis.");
         return;
       }
       const result = await signup(name, email, password, birthDate);
-      if (!result.success) {
-        setError(result.message || "Une erreur est survenue.");
-      } else {
-        onAuthSuccess();
-      }
+      if (!result.success) setError(result.message || "Erreur lors de la création.");
+      else onAuthSuccess();
     }
   };
 
   return (
-    <div className="min-h-[calc(100vh-80px)] flex items-center justify-center p-6 bg-slate-50">
-      <div className="w-full max-w-md bg-white rounded-[40px] p-8 md:p-12 shadow-2xl shadow-slate-200 border border-slate-100 relative overflow-hidden">
-        {/* Decorative elements */}
-        <div className="absolute -top-24 -right-24 w-48 h-48 bg-emerald-100 rounded-full blur-3xl opacity-50"></div>
-        <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-teal-100 rounded-full blur-3xl opacity-50"></div>
+    <div className="min-h-screen flex items-center justify-center p-4 bg-slate-50 relative overflow-hidden">
+      {/* Background decoration */}
+      <div className="absolute top-0 left-0 w-full h-full pointer-events-none">
+        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-emerald-100/50 rounded-full blur-[120px]"></div>
+        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-blue-100/50 rounded-full blur-[120px]"></div>
+      </div>
+
+      <div className="w-full max-w-lg bg-white rounded-[48px] p-8 md:p-12 shadow-2xl shadow-slate-200/60 border border-slate-100 relative z-10 transition-all duration-500">
         
-        <div className="text-center mb-10 relative">
-          <div className="w-16 h-16 bg-emerald-600 rounded-2xl flex items-center justify-center text-white font-black text-3xl mx-auto mb-6 shadow-xl shadow-emerald-100">N</div>
-          <h2 className="text-3xl font-black text-slate-900 tracking-tight">
-            {isLogin ? 'Bon retour !' : 'Rejoignez-nous'}
+        <div className="text-center mb-8">
+          <div className="w-16 h-16 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center text-white font-black text-3xl mx-auto mb-6 shadow-xl shadow-emerald-200">N</div>
+          <h2 className="text-3xl font-black text-slate-900 tracking-tighter mb-2">
+            {isLogin ? 'Bon retour !' : 'Rejoindre Nutriplan'}
           </h2>
-          <p className="text-slate-400 mt-2 font-medium text-sm">
-            {isLogin ? 'Connectez-vous à Nutriplan.' : 'Créez votre profil nutritionnel.'}
-          </p>
+          <p className="text-sm text-slate-400 font-medium">Votre santé commence dans votre assiette.</p>
         </div>
 
         {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-100 text-red-600 rounded-2xl text-xs font-bold animate-in fade-in slide-in-from-top-1 duration-200">
+          <div className="mb-6 p-4 bg-red-50 border border-red-100 text-red-600 rounded-2xl text-xs font-bold animate-in fade-in slide-in-from-top-2">
             ⚠️ {error}
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4 relative">
+        {showConfigHelp && (
+          <div className="mb-6 p-4 bg-amber-50 border border-amber-100 text-amber-700 rounded-2xl text-[10px] font-bold leading-relaxed">
+            <p className="uppercase tracking-widest mb-1">Configuration Google requise :</p>
+            L'erreur 401 signifie que vous devez ajouter l'URL <code className="bg-amber-100 px-1">{window.location.origin}</code> dans votre Console Google Cloud > Identifiants > Origines JavaScript autorisées.
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="space-y-4">
           {!isLogin && (
-            <div className="animate-in fade-in slide-in-from-left-4 duration-300 space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Nom complet</label>
+                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2 ml-1">Nom</label>
                 <input 
-                  type="text" 
-                  required
-                  className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:bg-white focus:border-emerald-500 outline-none transition-all font-medium text-slate-700"
+                  type="text" required
+                  className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:bg-white focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none transition-all font-semibold text-slate-700"
                   placeholder="Jean Dupont"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
+                  value={name} onChange={(e) => setName(e.target.value)}
                 />
               </div>
               <div>
-                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Date de naissance</label>
+                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2 ml-1">Naissance</label>
                 <input 
-                  type="date" 
-                  required
-                  className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:bg-white focus:border-emerald-500 outline-none transition-all font-medium text-slate-700"
-                  value={birthDate}
-                  onChange={(e) => setBirthDate(e.target.value)}
+                  type="date" required
+                  className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:bg-white focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none transition-all font-semibold text-slate-700"
+                  value={birthDate} onChange={(e) => setBirthDate(e.target.value)}
                 />
               </div>
             </div>
           )}
           
           <div>
-            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Email</label>
+            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2 ml-1">Email professionnel</label>
             <input 
-              type="email" 
-              required
-              className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:bg-white focus:border-emerald-500 outline-none transition-all font-medium text-slate-700"
-              placeholder="votre@email.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              type="email" required
+              className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:bg-white focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none transition-all font-semibold text-slate-700"
+              placeholder="jean@exemple.com"
+              value={email} onChange={(e) => setEmail(e.target.value)}
             />
           </div>
 
           <div>
-            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Mot de passe</label>
+            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2 ml-1">Mot de passe sécurisé</label>
             <input 
-              type="password" 
-              required
-              className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:bg-white focus:border-emerald-500 outline-none transition-all font-medium text-slate-700"
+              type="password" required
+              className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:bg-white focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none transition-all font-semibold text-slate-700"
               placeholder="••••••••"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              value={password} onChange={(e) => setPassword(e.target.value)}
             />
           </div>
           
           <button 
             type="submit"
             disabled={authState.isLoading}
-            className="w-full py-5 mt-4 bg-emerald-600 text-white font-black rounded-[20px] hover:bg-emerald-700 transition-all shadow-xl shadow-emerald-100 disabled:opacity-50 flex items-center justify-center gap-2 transform active:scale-95"
+            className="w-full py-5 bg-slate-900 text-white font-black rounded-3xl hover:bg-emerald-600 transition-all shadow-xl shadow-slate-200 active:scale-95 flex items-center justify-center uppercase tracking-widest text-[11px]"
           >
-            {authState.isLoading ? (
-              <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-            ) : isLogin ? 'SE CONNECTER' : "CRÉER MON COMPTE"}
+            {authState.isLoading ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div> : isLogin ? 'Se connecter' : "Créer mon accès"}
           </button>
         </form>
 
-        <div className="mt-8 relative flex items-center justify-center">
+        <div className="my-8 flex items-center justify-center">
           <div className="flex-grow border-t border-slate-100"></div>
-          <span className="px-4 text-[10px] font-black text-slate-300 uppercase tracking-widest bg-white">Ou continuer avec</span>
+          <span className="px-4 text-[9px] font-black text-slate-300 uppercase tracking-[0.3em] bg-white">ou via</span>
           <div className="flex-grow border-t border-slate-100"></div>
         </div>
 
-        <div className="mt-6 grid grid-cols-2 gap-4">
-          <button 
-            onClick={() => socialLogin('google')}
-            className="flex items-center justify-center gap-2 py-4 bg-white border border-slate-200 rounded-2xl hover:bg-slate-50 transition-all transform active:scale-95 shadow-sm"
-          >
-            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" className="w-5 h-5" alt="Google" />
-            <span className="text-xs font-bold text-slate-700">Google</span>
-          </button>
-          <button 
-            onClick={() => socialLogin('apple')}
-            className="flex items-center justify-center gap-2 py-4 bg-slate-900 border border-slate-900 rounded-2xl hover:bg-black transition-all transform active:scale-95 shadow-sm"
-          >
-            <svg className="w-5 h-5 fill-white" viewBox="0 0 384 512"><path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z"/></svg>
-            <span className="text-xs font-bold text-white">Apple</span>
-          </button>
+        <div className="space-y-4">
+          <div id="googleBtn" className="w-full overflow-hidden rounded-full"></div>
+          
+          {/* Fallback Demo Button for Testing */}
+          {window.location.hostname === 'localhost' && (
+            <button 
+              onClick={() => handleGoogleSuccess({ sub: 'demo', name: 'Développeur Test', email: 'dev@nutriplan.local' })}
+              className="w-full py-3 border border-dashed border-emerald-200 text-emerald-600 text-[10px] font-bold uppercase rounded-2xl hover:bg-emerald-50 transition-colors"
+            >
+              Mode Développeur (Skip Auth)
+            </button>
+          )}
         </div>
 
-        <div className="mt-8 text-center relative">
+        <div className="mt-8 text-center">
           <button 
-            onClick={() => {
-              setIsLogin(!isLogin);
-              setError(null);
-            }}
-            className="text-xs font-bold text-slate-500 hover:text-emerald-600 transition-colors py-2"
+            onClick={() => { setIsLogin(!isLogin); setError(null); }}
+            className="text-xs font-bold text-slate-400 hover:text-emerald-600 transition-all py-2 px-4 rounded-full hover:bg-emerald-50"
           >
-            {isLogin ? "Nouveau ici ? S'inscrire" : "Déjà membre ? Se connecter"}
+            {isLogin ? "Nouveau ici ? Créer un compte" : "Déjà membre ? Se connecter"}
           </button>
         </div>
       </div>
