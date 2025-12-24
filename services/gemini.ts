@@ -2,9 +2,6 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { DietPreference, DayPlan, ShoppingListItem } from "../types";
 
-// Fix: Follow guidelines by using process.env.API_KEY directly and ensuring named parameter initialization.
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-
 const MEAL_PROPERTIES = {
   name: { type: Type.STRING },
   description: { type: Type.STRING },
@@ -56,9 +53,10 @@ export const generateMealPlan = async (
   instructions?: string
 ): Promise<DayPlan[]> => {
   try {
+    // Fix: Use direct process.env.API_KEY initialization as required by guidelines
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     const customPrompt = instructions ? `Prend en compte ces instructions : "${instructions}".` : "";
     
-    // Fix: Using gemini-3-pro-preview for complex reasoning task (meal planning with constraints).
     const response = await ai.models.generateContent({
       model: "gemini-3-pro-preview",
       contents: `Génère un menu pour les jours suivants : ${days.join(', ')}.
@@ -75,7 +73,7 @@ export const generateMealPlan = async (
       }
     });
 
-    // Fix: Access response.text directly as a property (not a method).
+    // Fix: Access response.text property directly (not as a method)
     const text = response.text;
     if (!text) return [];
     return JSON.parse(text);
@@ -87,10 +85,11 @@ export const generateMealPlan = async (
 
 export const generateShoppingList = async (mealPlan: any[]): Promise<ShoppingListItem[]> => {
   try {
-    // Fix: Using gemini-3-flash-preview for basic text tasks (shopping list consolidation).
+    // Fix: Use direct process.env.API_KEY initialization as required by guidelines
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
-      contents: `Crée une liste de courses consolidée pour ces repas (ignore les repas non sélectionnés) : ${JSON.stringify(mealPlan)}`,
+      contents: `Crée une liste de courses consolidée pour ces repas : ${JSON.stringify(mealPlan)}`,
       config: {
         responseMimeType: "application/json",
         responseSchema: {
@@ -109,7 +108,7 @@ export const generateShoppingList = async (mealPlan: any[]): Promise<ShoppingLis
       }
     });
 
-    // Fix: Access response.text directly as a property.
+    // Fix: Access response.text property directly (not as a method)
     const text = response.text;
     if (!text) return [];
     return JSON.parse(text);

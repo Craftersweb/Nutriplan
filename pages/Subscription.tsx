@@ -1,9 +1,11 @@
 
 import React from 'react';
-import { useAuth } from '../App';
+// Fix: useApp is the exported hook from App.tsx, not useAuth
+import { useApp } from '../App';
 
 const Subscription: React.FC = () => {
-  const { authState, updateUser } = useAuth();
+  // Fix: use useApp() to access authState and updateUser
+  const { authState, updateUser } = useApp();
 
   const handleUpgrade = () => {
     // Integration with Stripe or payment API here

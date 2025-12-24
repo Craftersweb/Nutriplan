@@ -1,10 +1,12 @@
 
 import React, { useState } from 'react';
-import { useAuth } from '../App';
+// Fix: useApp is the exported hook from App.tsx, not useAuth
+import { useApp } from '../App';
 import { DietPreference } from '../types';
 
 const Preferences: React.FC = () => {
-  const { authState, updateUser } = useAuth();
+  // Fix: use useApp() to access authState and updateUser
+  const { authState, updateUser } = useApp();
   const [diet, setDiet] = useState<DietPreference>(authState.user?.diet || DietPreference.OMNIVORE);
   const [allergyInput, setAllergyInput] = useState('');
   const [allergies, setAllergies] = useState<string[]>(authState.user?.allergies || []);

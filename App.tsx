@@ -32,8 +32,6 @@ export const useApp = () => {
   return context;
 };
 
-export const useAuth = useApp;
-
 interface LocalUserDB extends User {
   password?: string;
 }
@@ -41,25 +39,25 @@ interface LocalUserDB extends User {
 const App: React.FC = () => {
   const [view, setView] = useState<'landing' | 'auth' | 'dashboard' | 'preferences' | 'shopping' | 'subscription' | 'how-it-works'>('landing');
   
-  const [currentMealPlan, setCurrentMealPlan] = useState<DayPlan[] | null>(() => {
-    const saved = localStorage.getItem('nutriplan_current_plan');
-    return saved ? JSON.parse(saved) : null;
-  });
-  
-  const [savedPlans, setSavedPlans] = useState<SavedPlan[]>(() => {
-    const saved = localStorage.getItem('nutriplan_saved_plans');
-    return saved ? JSON.parse(saved) : [];
-  });
-  
-  const [authState, setAuthState] = useState<AuthState>(() => {
-    const saved = localStorage.getItem('nutriplan_auth');
-    return saved ? JSON.parse(saved) : {
-      user: null,
-      token: null,
-      isAuthenticated: false,
-      isLoading: false
-    };
-  });
+  // Safe JSON parse helper
+  const safeParse = (key: string, fallback: any) => {
+    try {
+      const item = localStorage.getItem(key);
+      return item ? JSON.parse(item) : fallback;
+    } catch (e) {
+      console.error(`Error parsing localStorage key "${key}":`, e);
+      return fallback;
+    }
+  };
+
+  const [currentMealPlan, setCurrentMealPlan] = useState<DayPlan[] | null>(() => safeParse('nutriplan_current_plan', null));
+  const [savedPlans, setSavedPlans] = useState<SavedPlan[]>(() => safeParse('nutriplan_saved_plans', []));
+  const [authState, setAuthState] = useState<AuthState>(() => safeParse('nutriplan_auth', {
+    user: null,
+    token: null,
+    isAuthenticated: false,
+    isLoading: false
+  }));
 
   useEffect(() => {
     localStorage.setItem('nutriplan_current_plan', JSON.stringify(currentMealPlan));
@@ -76,10 +74,7 @@ const App: React.FC = () => {
     }
   }, [authState, view]);
 
-  const getUsersDB = (): LocalUserDB[] => {
-    const db = localStorage.getItem('nutriplan_users_db');
-    return db ? JSON.parse(db) : [];
-  };
+  const getUsersDB = (): LocalUserDB[] => safeParse('nutriplan_users_db', []);
 
   const signup = async (name: string, email: string, pass: string, birthDate: string) => {
     setAuthState(prev => ({ ...prev, isLoading: true }));
@@ -150,7 +145,7 @@ const App: React.FC = () => {
       id: `google_${googleData.sub}`,
       name: googleData.name,
       email: googleData.email,
-      birthDate: '1990-01-01', // Par défaut pour Google login
+      birthDate: '1990-01-01',
       diet: DietPreference.OMNIVORE,
       allergies: [],
       subscriptionType: 'free'
