@@ -109,12 +109,15 @@ const App: React.FC = () => {
 
   const saveCurrentPlan = (name: string) => {
     if (!currentMealPlan || !authState.user) return;
+    const lastServings = parseInt(localStorage.getItem('nutriplan_last_servings') || '2');
+    
     const newSavedPlan: SavedPlan = {
       id: Math.random().toString(36).substr(2, 9),
       name: name || `Menu du ${new Date().toLocaleDateString()}`,
       date: new Date().toISOString(),
       plan: currentMealPlan,
-      diet: authState.user.diet
+      diet: authState.user.diet,
+      servings: lastServings
     };
     setSavedPlans(prev => [newSavedPlan, ...prev]);
   };

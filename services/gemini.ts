@@ -47,14 +47,26 @@ const MEAL_PLAN_SCHEMA = {
   }
 };
 
-export const generateMealPlan = async (diet: DietPreference, allergies: string[]): Promise<DayPlan[]> => {
+export const generateMealPlan = async (
+  diet: DietPreference, 
+  allergies: string[], 
+  servings: number, 
+  days: string[], 
+  instructions?: string
+): Promise<DayPlan[]> => {
   try {
+    const customPrompt = instructions ? `Prend en compte ces instructions : "${instructions}".` : "";
+    
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
-      contents: `Génère un menu complet pour 7 jours pour un régime ${diet}. 
-                Allergies à éviter: ${allergies.join(', ') || 'Aucune'}. 
-                Chaque repas doit avoir un nom, description, calories, ingrédients et instructions courtes. 
-                Ajoute une URL d'image générique de Unsplash pertinente pour le plat (ex: https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400).`,
+      contents: `Génère un menu pour les jours suivants : ${days.join(', ')}.
+                Régime : ${diet}. 
+                Nombre de personnes : ${servings}. 
+                Allergies : ${allergies.join(', ') || 'Aucune'}. 
+                ${customPrompt}
+                IMPORTANT: Calcule les quantités pour exactement ${servings} personnes.
+                Chaque jour doit avoir Petit-déjeuner, Déjeuner et Dîner.
+                Ajoute une URL d'image Unsplash pertinente (ex: https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400).`,
       config: {
         responseMimeType: "application/json",
         responseSchema: MEAL_PLAN_SCHEMA
@@ -70,11 +82,11 @@ export const generateMealPlan = async (diet: DietPreference, allergies: string[]
   }
 };
 
-export const generateShoppingList = async (mealPlan: DayPlan[]): Promise<ShoppingListItem[]> => {
+export const generateShoppingList = async (mealPlan: any[]): Promise<ShoppingListItem[]> => {
   try {
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
-      contents: `À partir de ce plan de repas, crée une liste de courses consolidée et catégorisée (Produits frais, Boucherie, Crémerie, Épicerie, etc.): ${JSON.stringify(mealPlan)}`,
+      contents: `Crée une liste de courses consolidée pour ces repas (ignore les repas non sélectionnés) : ${JSON.stringify(mealPlan)}`,
       config: {
         responseMimeType: "application/json",
         responseSchema: {

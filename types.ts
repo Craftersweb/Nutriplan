@@ -26,6 +26,8 @@ export interface Meal {
   instructions: string[];
   image: string;
   type: 'breakfast' | 'lunch' | 'dinner';
+  isSelected?: boolean; // Pour choisir si on inclut le repas
+  isTakeAway?: boolean; // Pour définir si c'est à emporter
 }
 
 export interface DayPlan {
@@ -43,6 +45,7 @@ export interface SavedPlan {
   date: string;
   plan: DayPlan[];
   diet: DietPreference;
+  servings: number;
 }
 
 export interface ShoppingListItem {
@@ -50,6 +53,7 @@ export interface ShoppingListItem {
   amount: string;
   category: string;
   checked: boolean;
+  inStock?: boolean;
 }
 
 export interface AuthState {
@@ -57,4 +61,10 @@ export interface AuthState {
   token: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+}
+
+export interface CartItem {
+  name: string;
+  quantity: string;
+  timestamp: number;
 }
