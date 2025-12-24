@@ -7,7 +7,7 @@ import { DayPlan, DietPreference, Meal } from '../types';
 const DAYS_OF_WEEK = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'];
 
 const Dashboard: React.FC = () => {
-  const { authState, updateUser, currentMealPlan, setCurrentMealPlan, savedPlans, saveCurrentPlan } = useApp();
+  const { authState, currentMealPlan, setCurrentMealPlan, savedPlans, saveCurrentPlan } = useApp();
   const [loading, setLoading] = useState(false);
   const [activeDay, setActiveDay] = useState(0);
   const [isSaving, setIsSaving] = useState(false);
@@ -51,14 +51,18 @@ const Dashboard: React.FC = () => {
     setCurrentMealPlan(null);
     setActiveDay(0);
     setIsSaving(false);
+    setSaveName('');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const toggleMealProperty = (dayIdx: number, mealType: 'breakfast' | 'lunch' | 'dinner', property: 'isSelected' | 'isTakeAway') => {
     if (!currentMealPlan) return;
     const newPlan = [...currentMealPlan];
     const meal = newPlan[dayIdx].meals[mealType];
-    (meal as any)[property] = !(meal as any)[property];
-    setCurrentMealPlan(newPlan);
+    if (meal) {
+      (meal as any)[property] = !(meal as any)[property];
+      setCurrentMealPlan(newPlan);
+    }
   };
 
   if (loading) {
@@ -66,7 +70,7 @@ const Dashboard: React.FC = () => {
       <div className="p-8 flex flex-col items-center justify-center min-h-[60vh]">
         <div className="w-16 h-16 border-4 border-emerald-500/20 border-t-emerald-500 rounded-full animate-spin mb-6"></div>
         <p className="text-xl font-bold text-slate-900 tracking-tight">IA Nutriplan compose votre menu...</p>
-        <p className="text-slate-400 mt-2 text-sm italic">Planification pour {selectedDays.length} jours</p>
+        <p className="text-slate-400 mt-2 text-sm italic">Personnalisation en cours</p>
       </div>
     );
   }
@@ -96,7 +100,7 @@ const Dashboard: React.FC = () => {
                 savedPlans.slice(0, 8).map(plan => (
                   <button 
                     key={plan.id}
-                    onClick={() => { setCurrentMealPlan(plan.plan); setServings(plan.servings); setActiveDay(0); }}
+                    onClick={() => { setCurrentMealPlan(plan.plan); setActiveDay(0); }}
                     className="w-full text-left p-3 rounded-xl hover:bg-emerald-50 transition-all text-[11px] font-bold text-slate-600 border border-transparent hover:border-emerald-100"
                   >
                     {plan.name} <span className="opacity-40 ml-1">• {plan.servings}p</span>
@@ -113,11 +117,11 @@ const Dashboard: React.FC = () => {
               <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-8">
                 <div>
                   <h1 className="text-3xl font-black text-slate-900 tracking-tight">Mon Planning</h1>
-                  <p className="text-slate-500 text-sm italic">Personnalisez votre menu avant les courses.</p>
+                  <p className="text-slate-500 text-sm">Gérez vos repas avant d'exporter la liste de courses.</p>
                 </div>
                 <div className="flex gap-2">
-                  <button onClick={() => setIsSaving(true)} className="px-5 py-3 bg-white border border-slate-200 rounded-xl text-[10px] font-bold text-slate-600 hover:bg-slate-50 transition-all">Sauvegarder</button>
-                  <button onClick={handleNewPlan} className="px-5 py-3 bg-slate-900 text-white rounded-xl text-[10px] font-bold hover:bg-slate-800 shadow-lg transition-all">Modifier critères</button>
+                  <button onClick={() => setIsSaving(true)} className="px-5 py-3 bg-white border border-slate-200 rounded-xl text-[10px] font-bold text-slate-600">Sauvegarder</button>
+                  <button onClick={handleNewPlan} className="px-5 py-3 bg-slate-900 text-white rounded-xl text-[10px] font-bold shadow-lg">Modifier</button>
                 </div>
               </div>
 
@@ -138,7 +142,7 @@ const Dashboard: React.FC = () => {
                     key={idx}
                     onClick={() => setActiveDay(idx)}
                     className={`px-6 py-3 rounded-xl whitespace-nowrap font-bold text-[10px] uppercase tracking-widest transition-all ${
-                      activeDay === idx ? 'bg-emerald-600 text-white shadow-lg scale-105' : 'bg-white text-slate-400 border border-slate-100 hover:border-emerald-200'
+                      activeDay === idx ? 'bg-emerald-600 text-white shadow-lg' : 'bg-white text-slate-400 border border-slate-100'
                     }`}
                   >
                     {plan.day}
@@ -168,7 +172,7 @@ const Dashboard: React.FC = () => {
               </div>
             </>
           ) : (
-            <div className="bg-white rounded-[40px] p-8 md:p-12 shadow-sm border border-slate-100">
+            <div className="bg-white rounded-[40px] p-8 md:p-12 shadow-sm border border-slate-100 animate-in fade-in duration-500">
               <div className="max-w-3xl mx-auto space-y-12">
                 <div className="text-center">
                   <div className="w-16 h-16 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-6">⚙️</div>
@@ -280,9 +284,9 @@ const MealDetailModal = ({ meal, onClose }: { meal: Meal, onClose: () => void })
         <h2 className="text-2xl font-black text-slate-900 mt-4 mb-8 leading-tight">{meal.name}</h2>
         <div className="space-y-8">
           <div>
-            <h4 className="text-[10px] font-black text-slate-300 uppercase tracking-widest mb-4">Liste des ingrédients</h4>
+            <h4 className="text-[10px] font-black text-slate-300 uppercase tracking-widest mb-4">Ingrédients</h4>
             <ul className="space-y-2">
-              {meal.ingredients.map((ing, i) => <li key={i} className="text-xs font-bold text-slate-700 flex items-start gap-2"><span className="text-emerald-500 mt-1">•</span> {ing}</li>)}
+              {meal.ingredients.map((ing, i) => <li key={i} className="text-xs font-bold text-slate-700 flex items-start gap-2">• {ing}</li>)}
             </ul>
           </div>
           <div>
