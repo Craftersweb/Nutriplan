@@ -12,6 +12,7 @@ export interface User {
   id: string;
   name: string;
   email: string;
+  birthDate: string;
   diet: DietPreference;
   allergies: string[];
   subscriptionType: 'free' | 'premium';

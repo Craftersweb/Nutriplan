@@ -4,7 +4,7 @@ import { useApp } from '../App';
 import { generateShoppingList } from '../services/gemini';
 import { ShoppingListItem, SavedPlan } from '../types';
 
-type Retailer = 'delhaize' | 'colruyt' | 'carrefour';
+type Retailer = 'delhaize' | 'colruyt';
 
 const ShoppingList: React.FC = () => {
   const { currentMealPlan, savedPlans } = useApp();
@@ -80,7 +80,6 @@ const ShoppingList: React.FC = () => {
     const q = encodeURIComponent(cleaned).replace(/%20/g, '+');
     if (retailer === 'delhaize') return `https://www.delhaize.be/fr-be/search?text=${q}`;
     if (retailer === 'colruyt') return `https://www.collectandgo.be/colruyt/fr/recherche?searchTerm=${q}`;
-    if (retailer === 'carrefour') return `https://www.carrefour.be/fr/recherche.html?q=${q}`;
     return '';
   };
 
@@ -93,6 +92,7 @@ const ShoppingList: React.FC = () => {
     if (list.length === 0) return;
     setCurrentIndex(0);
     setViewMode('assistant');
+    // Ouverture automatique du premier produit au lancement
     syncSearch(list[0].item);
   };
 
@@ -114,7 +114,7 @@ const ShoppingList: React.FC = () => {
     </div>
   );
 
-  // VUE 1 : SÉLECTION DU MENU
+  // VUE 1 : SÉLECTION DU MENU (SEMAINE)
   if (viewMode === 'selection') {
     return (
       <div className="max-w-4xl mx-auto p-6 lg:p-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -188,11 +188,11 @@ const ShoppingList: React.FC = () => {
             <div className="flex flex-col gap-2">
               <label className="text-[9px] font-black uppercase text-slate-400 tracking-widest">Enseigne choisie</label>
               <div className="flex bg-white p-1 rounded-2xl border border-slate-200 shadow-sm">
-                {(['delhaize', 'colruyt', 'carrefour'] as Retailer[]).map(r => (
+                {(['delhaize', 'colruyt'] as Retailer[]).map(r => (
                   <button 
                     key={r}
                     onClick={() => setRetailer(r)}
-                    className={`flex-1 sm:flex-none px-4 py-2 rounded-xl text-[10px] font-black uppercase transition-all ${
+                    className={`flex-1 sm:flex-none px-6 py-2 rounded-xl text-[10px] font-black uppercase transition-all ${
                       retailer === r ? 'bg-emerald-600 text-white shadow-lg' : 'text-slate-400'
                     }`}
                   >
@@ -265,9 +265,7 @@ const ShoppingList: React.FC = () => {
                       <button 
                         onClick={handleNextWithSearch}
                         className={`order-1 sm:order-2 flex-[2] py-6 md:py-8 rounded-[24px] md:rounded-[30px] font-black text-lg md:text-xl uppercase tracking-widest shadow-2xl transition-all transform active:scale-95 flex items-center justify-center gap-4 ${
-                          retailer === 'delhaize' ? 'bg-red-600 hover:bg-red-500' : 
-                          retailer === 'colruyt' ? 'bg-orange-600 hover:bg-orange-500' : 
-                          'bg-blue-600 hover:bg-blue-500'
+                          retailer === 'delhaize' ? 'bg-red-600 hover:bg-red-500' : 'bg-orange-600 hover:bg-orange-500'
                         }`}
                       >
                         <span>{currentIndex === list.length - 1 ? 'Terminer' : 'Suivant'}</span>

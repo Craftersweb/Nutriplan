@@ -11,7 +11,9 @@ import Navbar from './components/Navbar';
 
 interface AppContextType {
   authState: AuthState;
-  login: (email: string, pass: string) => Promise<void>;
+  login: (email: string, pass: string) => Promise<{success: boolean, message?: string}>;
+  signup: (name: string, email: string, pass: string, birthDate: string) => Promise<{success: boolean, message?: string}>;
+  socialLogin: (provider: 'google' | 'apple') => Promise<void>;
   logout: () => void;
   updateUser: (data: Partial<User>) => void;
   currentMealPlan: DayPlan[] | null;
@@ -30,10 +32,13 @@ export const useApp = () => {
 
 export const useAuth = useApp;
 
+interface LocalUserDB extends User {
+  password?: string;
+}
+
 const App: React.FC = () => {
   const [view, setView] = useState<'landing' | 'auth' | 'dashboard' | 'preferences' | 'shopping' | 'subscription'>('landing');
   
-  // Persistence avec LocalStorage
   const [currentMealPlan, setCurrentMealPlan] = useState<DayPlan[] | null>(() => {
     const saved = localStorage.getItem('nutriplan_current_plan');
     return saved ? JSON.parse(saved) : null;
@@ -54,7 +59,6 @@ const App: React.FC = () => {
     };
   });
 
-  // Sauvegarde auto quand l'état change
   useEffect(() => {
     localStorage.setItem('nutriplan_current_plan', JSON.stringify(currentMealPlan));
   }, [currentMealPlan]);
@@ -67,24 +71,90 @@ const App: React.FC = () => {
     localStorage.setItem('nutriplan_auth', JSON.stringify(authState));
   }, [authState]);
 
-  const login = async (email: string, pass: string) => {
+  const getUsersDB = (): LocalUserDB[] => {
+    const db = localStorage.getItem('nutriplan_users_db');
+    return db ? JSON.parse(db) : [];
+  };
+
+  const signup = async (name: string, email: string, pass: string, birthDate: string) => {
     setAuthState(prev => ({ ...prev, isLoading: true }));
-    await new Promise(resolve => setTimeout(resolve, 800));
+    await new Promise(resolve => setTimeout(resolve, 1000));
     
-    const isTestAccount = email.toLowerCase() === 'test@gmail.com' && pass === 'test1234';
-    
-    const mockUser: User = {
-      id: '1',
-      name: isTestAccount ? 'Test User' : 'Utilisateur Nutriplan',
-      email: email,
+    const db = getUsersDB();
+    if (db.some(u => u.email.toLowerCase() === email.toLowerCase())) {
+      setAuthState(prev => ({ ...prev, isLoading: false }));
+      return { success: false, message: "Cet email est déjà utilisé." };
+    }
+
+    const newUser: LocalUserDB = {
+      id: Math.random().toString(36).substr(2, 9),
+      name,
+      email: email.toLowerCase(),
+      password: pass,
+      birthDate,
       diet: DietPreference.OMNIVORE,
       allergies: [],
       subscriptionType: 'free'
     };
+
+    localStorage.setItem('nutriplan_users_db', JSON.stringify([...db, newUser]));
     
+    const { password, ...userSession } = newUser;
+    setAuthState({
+      user: userSession,
+      token: 'session-' + userSession.id,
+      isAuthenticated: true,
+      isLoading: false
+    });
+    setView('dashboard');
+    return { success: true };
+  };
+
+  const login = async (email: string, pass: string) => {
+    setAuthState(prev => ({ ...prev, isLoading: true }));
+    await new Promise(resolve => setTimeout(resolve, 800));
+    
+    const db = getUsersDB();
+    const foundUser = db.find(u => u.email.toLowerCase() === email.toLowerCase());
+
+    if (!foundUser) {
+      setAuthState(prev => ({ ...prev, isLoading: false }));
+      return { success: false, message: "Aucun compte trouvé avec cet email." };
+    }
+
+    if (foundUser.password !== pass) {
+      setAuthState(prev => ({ ...prev, isLoading: false }));
+      return { success: false, message: "Mot de passe incorrect." };
+    }
+
+    const { password, ...userSession } = foundUser;
+    setAuthState({
+      user: userSession,
+      token: 'session-' + userSession.id,
+      isAuthenticated: true,
+      isLoading: false
+    });
+    setView('dashboard');
+    return { success: true };
+  };
+
+  const socialLogin = async (provider: 'google' | 'apple') => {
+    setAuthState(prev => ({ ...prev, isLoading: true }));
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    
+    const mockUser: User = {
+      id: `social-${provider}-${Math.random().toString(36).substr(2, 5)}`,
+      name: provider === 'google' ? 'Utilisateur Google' : 'Utilisateur Apple',
+      email: `${provider}@social.com`,
+      birthDate: '1995-01-01',
+      diet: DietPreference.OMNIVORE,
+      allergies: [],
+      subscriptionType: 'free'
+    };
+
     setAuthState({
       user: mockUser,
-      token: 'fake-jwt-token',
+      token: 'session-' + mockUser.id,
       isAuthenticated: true,
       isLoading: false
     });
@@ -94,23 +164,22 @@ const App: React.FC = () => {
   const logout = () => {
     setAuthState({ user: null, token: null, isAuthenticated: false, isLoading: false });
     setCurrentMealPlan(null);
-    localStorage.clear();
     setView('landing');
   };
 
   const updateUser = (data: Partial<User>) => {
     if (authState.user) {
-      setAuthState(prev => ({
-        ...prev,
-        user: { ...prev.user!, ...data }
-      }));
+      const updatedUser = { ...authState.user!, ...data };
+      setAuthState(prev => ({ ...prev, user: updatedUser }));
+      const db = getUsersDB();
+      const newDb = db.map(u => u.id === updatedUser.id ? { ...u, ...data } : u);
+      localStorage.setItem('nutriplan_users_db', JSON.stringify(newDb));
     }
   };
 
   const saveCurrentPlan = (name: string) => {
     if (!currentMealPlan || !authState.user) return;
     const lastServings = parseInt(localStorage.getItem('nutriplan_last_servings') || '2');
-    
     const newSavedPlan: SavedPlan = {
       id: Math.random().toString(36).substr(2, 9),
       name: name || `Menu du ${new Date().toLocaleDateString()}`,
@@ -125,7 +194,7 @@ const App: React.FC = () => {
   const renderView = () => {
     switch (view) {
       case 'landing': return <LandingPage onGetStarted={() => setView('auth')} />;
-      case 'auth': return <Auth />;
+      case 'auth': return <Auth onAuthSuccess={() => setView('dashboard')} />;
       case 'dashboard': return <Dashboard />;
       case 'preferences': return <Preferences />;
       case 'shopping': return <ShoppingList />;
@@ -136,7 +205,7 @@ const App: React.FC = () => {
 
   return (
     <AppContext.Provider value={{ 
-      authState, login, logout, updateUser, 
+      authState, login, signup, socialLogin, logout, updateUser, 
       currentMealPlan, setCurrentMealPlan, 
       savedPlans, saveCurrentPlan 
     }}>
