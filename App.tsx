@@ -2,7 +2,9 @@
 import React, { useState, createContext, useContext, useEffect } from 'react';
 import { DietPreference, User, AuthState, DayPlan, SavedPlan } from './types';
 import LandingPage from './pages/LandingPage';
-import Dashboard from './pages/Dashboard';
+import CreatePlan from './pages/CreatePlan';
+import Calendar from './pages/Calendar';
+import Settings from './pages/Settings';
 import Auth from './pages/Auth';
 import Preferences from './pages/Preferences';
 import ShoppingList from './pages/ShoppingList';
@@ -39,7 +41,7 @@ interface LocalUserDB extends User {
 }
 
 const App: React.FC = () => {
-  const [view, setView] = useState<'landing' | 'auth' | 'dashboard' | 'preferences' | 'shopping' | 'subscription' | 'how-it-works' | 'onboarding'>('landing');
+  const [view, setView] = useState<'landing' | 'auth' | 'create' | 'calendar' | 'shopping' | 'preferences' | 'settings' | 'premium' | 'how-it-works' | 'onboarding'>('landing');
   
   const safeParse = (key: string, fallback: any) => {
     try {
@@ -72,7 +74,7 @@ const App: React.FC = () => {
     localStorage.setItem('nutriplan_auth', JSON.stringify(authState));
     
     if (authState.isAuthenticated && (view === 'landing' || view === 'auth')) {
-        setView('dashboard');
+        setView('calendar');
     }
   }, [authState.isAuthenticated]);
 
@@ -158,7 +160,7 @@ const App: React.FC = () => {
       isLoading: false
     });
     
-    setView('dashboard');
+    setView('calendar');
     return { success: true };
   };
 
@@ -182,7 +184,7 @@ const App: React.FC = () => {
       isLoading: false
     });
     
-    setView('dashboard');
+    setView('calendar');
   };
 
   const logout = () => {
@@ -219,12 +221,14 @@ const App: React.FC = () => {
     switch (view) {
       case 'landing': return <LandingPage onGetStarted={() => setView('auth')} onHowItWorks={() => setView('how-it-works')} />;
       case 'auth': return <Auth onAuthSuccess={() => {}} />;
-      case 'dashboard': return <Dashboard />;
+      case 'create': return <CreatePlan />;
+      case 'calendar': return <Calendar />;
       case 'preferences': return <Preferences />;
       case 'shopping': return <ShoppingList />;
-      case 'subscription': return <Subscription />;
+      case 'premium': return <Subscription />;
+      case 'settings': return <Settings />;
       case 'how-it-works': return <HowItWorks />;
-      case 'onboarding': return <Onboarding onComplete={() => setView('dashboard')} />;
+      case 'onboarding': return <Onboarding onComplete={() => setView('calendar')} />;
       default: return <LandingPage onGetStarted={() => setView('auth')} onHowItWorks={() => setView('how-it-works')} />;
     }
   };

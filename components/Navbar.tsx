@@ -12,7 +12,7 @@ const Navbar: React.FC<NavbarProps> = ({ currentView, setView }) => {
 
   const handleLogoClick = () => {
     if (authState.isAuthenticated) {
-      setView('dashboard');
+      setView('calendar');
     } else {
       setView('landing');
     }
@@ -28,10 +28,16 @@ const Navbar: React.FC<NavbarProps> = ({ currentView, setView }) => {
       {authState.isAuthenticated && (
         <div className="hidden md:flex items-center gap-6 text-[10px] font-black uppercase tracking-widest text-slate-500">
           <button 
-            onClick={() => setView('dashboard')}
-            className={`hover:text-emerald-600 transition-colors ${currentView === 'dashboard' ? 'text-emerald-600' : ''}`}
+            onClick={() => setView('create')}
+            className={`hover:text-emerald-600 transition-colors ${currentView === 'create' ? 'text-emerald-600' : ''}`}
           >
-            Planning
+            Créer
+          </button>
+          <button 
+            onClick={() => setView('calendar')}
+            className={`hover:text-emerald-600 transition-colors ${currentView === 'calendar' ? 'text-emerald-600' : ''}`}
+          >
+            Calendrier
           </button>
           <button 
             onClick={() => setView('shopping')}
@@ -43,7 +49,19 @@ const Navbar: React.FC<NavbarProps> = ({ currentView, setView }) => {
             onClick={() => setView('preferences')}
             className={`hover:text-emerald-600 transition-colors ${currentView === 'preferences' ? 'text-emerald-600' : ''}`}
           >
-            Profil
+            Préférence
+          </button>
+          <button 
+            onClick={() => setView('settings')}
+            className={`hover:text-emerald-600 transition-colors ${currentView === 'settings' ? 'text-emerald-600' : ''}`}
+          >
+            Paramètre
+          </button>
+          <button 
+            onClick={() => setView('premium')}
+            className={`px-3 py-1 bg-amber-100 text-amber-600 rounded-lg hover:bg-amber-200 transition-colors ${currentView === 'premium' ? 'bg-amber-200' : ''}`}
+          >
+            Premium
           </button>
         </div>
       )}

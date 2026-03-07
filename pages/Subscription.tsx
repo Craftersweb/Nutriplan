@@ -1,16 +1,15 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 // Fix: useApp is the exported hook from App.tsx, not useAuth
 import { useApp } from '../App';
 
 const Subscription: React.FC = () => {
-  // Fix: use useApp() to access authState and updateUser
   const { authState, updateUser } = useApp();
+  const [isUpgraded, setIsUpgraded] = useState(false);
 
   const handleUpgrade = () => {
-    // Integration with Stripe or payment API here
     updateUser({ subscriptionType: 'premium' });
-    alert("Merci ! Vous êtes maintenant Premium.");
+    setIsUpgraded(true);
   };
 
   return (
@@ -62,14 +61,14 @@ const Subscription: React.FC = () => {
 
           <button 
             onClick={handleUpgrade}
-            disabled={authState.user?.subscriptionType === 'premium'}
+            disabled={authState.user?.subscriptionType === 'premium' || isUpgraded}
             className={`w-full py-4 font-bold rounded-2xl transition-all ${
-                authState.user?.subscriptionType === 'premium'
+                (authState.user?.subscriptionType === 'premium' || isUpgraded)
                 ? 'bg-slate-800 text-slate-500'
                 : 'bg-emerald-500 text-white hover:bg-emerald-400 shadow-xl shadow-emerald-500/20'
             }`}
           >
-            {authState.user?.subscriptionType === 'premium' ? 'Abonnement actif' : 'Passer au Premium'}
+            {authState.user?.subscriptionType === 'premium' || isUpgraded ? 'Abonnement actif' : 'Passer au Premium'}
           </button>
         </div>
       </div>

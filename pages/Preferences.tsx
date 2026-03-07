@@ -9,6 +9,8 @@ const Preferences: React.FC = () => {
   const [allergyInput, setAllergyInput] = useState('');
   const [allergies, setAllergies] = useState<string[]>(authState.user?.allergies || []);
 
+  const [isSaved, setIsSaved] = useState(false);
+
   const addAllergy = (e: React.FormEvent) => {
     e.preventDefault();
     if (allergyInput && !allergies.includes(allergyInput)) {
@@ -24,7 +26,8 @@ const Preferences: React.FC = () => {
 
   const handleSave = () => {
     updateUser({ diet, allergies });
-    alert("Profil mis à jour !");
+    setIsSaved(true);
+    setTimeout(() => setIsSaved(false), 3000);
   };
 
   return (
@@ -94,7 +97,7 @@ const Preferences: React.FC = () => {
             onClick={handleSave}
             className="w-full py-5 bg-emerald-600 text-white font-bold rounded-3xl hover:bg-emerald-700 shadow-xl shadow-emerald-100 transition-all"
           >
-            Sauvegarder les préférences
+            {isSaved ? '✓ Préférences enregistrées' : 'Sauvegarder les préférences'}
           </button>
         </div>
       </div>
