@@ -3,15 +3,24 @@ import React, { useState } from 'react';
 import { useApp } from '../App';
 
 const Settings: React.FC = () => {
-  const { authState, updateUser, logout } = useApp();
+  const { authState, updateUser, logout, resetDB } = useApp();
   const [name, setName] = useState(authState.user?.name || '');
   const [email, setEmail] = useState(authState.user?.email || '');
   const [isSaved, setIsSaved] = useState(false);
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
 
   const handleSave = () => {
     updateUser({ name, email });
     setIsSaved(true);
     setTimeout(() => setIsSaved(false), 3000);
+  };
+
+  const handleReset = () => {
+    if (showResetConfirm) {
+      resetDB();
+    } else {
+      setShowResetConfirm(true);
+    }
   };
 
   return (
@@ -56,10 +65,27 @@ const Settings: React.FC = () => {
             
             <button 
               onClick={logout}
-              className="w-full py-4 bg-red-50 text-red-600 font-black rounded-2xl hover:bg-red-100 transition-all"
+              className="w-full py-4 bg-slate-50 text-slate-600 font-black rounded-2xl hover:bg-slate-100 transition-all"
             >
               Se déconnecter
             </button>
+
+            <div className="mt-8 pt-8 border-t border-slate-100">
+              <h3 className="text-xs font-black text-red-600 uppercase tracking-widest mb-4">Zone de danger</h3>
+              <button 
+                onClick={handleReset}
+                className={`w-full py-4 font-black rounded-2xl transition-all ${
+                  showResetConfirm 
+                    ? 'bg-red-600 text-white shadow-lg shadow-red-100' 
+                    : 'bg-red-50 text-red-600 hover:bg-red-100'
+                }`}
+              >
+                {showResetConfirm ? 'Confirmer la réinitialisation complète' : 'Réinitialiser toutes les données'}
+              </button>
+              <p className="mt-2 text-[10px] text-slate-400 font-medium text-center">
+                Cette action supprimera définitivement votre compte local, vos menus et vos préférences.
+              </p>
+            </div>
           </div>
         </div>
       </div>

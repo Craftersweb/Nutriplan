@@ -149,7 +149,7 @@ const ShoppingList: React.FC = () => {
                     className="p-6 bg-white rounded-3xl border border-slate-100 hover:border-emerald-500 transition-all text-left shadow-sm hover:shadow-md"
                   >
                     <h3 className="text-lg font-black text-slate-800 leading-tight mb-1">{plan.name}</h3>
-                    <p className="text-xs text-slate-400 font-medium">{new Date(plan.date).toLocaleDateString()} • {plan.servings} pers.</p>
+                    <p className="text-xs text-slate-400 font-medium">{new Date(plan.date).toLocaleDateString()} • {plan.week}</p>
                   </button>
                 ))
               ) : (
@@ -282,19 +282,32 @@ const ShoppingList: React.FC = () => {
               </div>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 animate-in fade-in duration-500">
-              {list.map((item, idx) => (
-                <div key={idx} className="bg-white p-5 md:p-6 rounded-3xl border border-slate-100 flex items-center justify-between group hover:border-emerald-500 transition-all shadow-sm">
-                  <div className="pr-4">
-                    <p className="text-[13px] md:text-[14px] font-black text-slate-800 leading-tight mb-1">{item.item}</p>
-                    <p className="text-[9px] md:text-[10px] font-bold text-slate-400 uppercase tracking-widest">{item.amount}</p>
+            <div className="space-y-12 animate-in fade-in duration-500">
+              {Object.entries(
+                list.reduce((acc, item) => {
+                  if (!acc[item.category]) acc[item.category] = [];
+                  acc[item.category].push(item);
+                  return acc;
+                }, {} as Record<string, ShoppingListItem[]>)
+              ).map(([category, items]) => (
+                <div key={category} className="space-y-4">
+                  <h3 className="text-xs font-black text-emerald-600 uppercase tracking-[0.2em] border-b border-emerald-100 pb-2">{category}</h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+                    {(items as ShoppingListItem[]).map((item, idx) => (
+                      <div key={idx} className="bg-white p-5 md:p-6 rounded-3xl border border-slate-100 flex items-center justify-between group hover:border-emerald-500 transition-all shadow-sm">
+                        <div className="pr-4">
+                          <p className="text-[13px] md:text-[14px] font-black text-slate-800 leading-tight mb-1">{item.item}</p>
+                          <p className="text-[9px] md:text-[10px] font-bold text-slate-400 uppercase tracking-widest">{item.amount}</p>
+                        </div>
+                        <button 
+                          onClick={() => syncSearch(item.item)}
+                          className="w-10 h-10 md:w-12 md:h-12 rounded-2xl bg-slate-50 text-slate-300 group-hover:bg-emerald-50 group-hover:text-emerald-600 flex items-center justify-center transition-all border border-transparent group-hover:border-emerald-100 shrink-0"
+                        >
+                          🛒
+                        </button>
+                      </div>
+                    ))}
                   </div>
-                  <button 
-                    onClick={() => syncSearch(item.item)}
-                    className="w-10 h-10 md:w-12 md:h-12 rounded-2xl bg-slate-50 text-slate-300 group-hover:bg-emerald-50 group-hover:text-emerald-600 flex items-center justify-center transition-all border border-transparent group-hover:border-emerald-100 shrink-0"
-                  >
-                    🛒
-                  </button>
                 </div>
               ))}
             </div>

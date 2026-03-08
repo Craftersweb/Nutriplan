@@ -15,7 +15,8 @@ const Auth: React.FC<AuthProps> = ({ onAuthSuccess }) => {
   const [error, setError] = useState<string | null>(null);
   const [showConfigHelp, setShowConfigHelp] = useState(false);
   
-  const { login, signup, handleGoogleSuccess, authState } = useApp();
+  const { login, signup, handleGoogleSuccess, authState, resetDB } = useApp();
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
 
   const GOOGLE_CLIENT_ID = "876547268030-nfgelidbo8p0jvd3hbnp4tosaeng74a0.apps.googleusercontent.com";
 
@@ -193,6 +194,15 @@ const Auth: React.FC<AuthProps> = ({ onAuthSuccess }) => {
             className="text-xs font-bold text-slate-400 hover:text-emerald-600 transition-all py-2 px-4 rounded-full hover:bg-emerald-50"
           >
             {isLogin ? "Nouveau ici ? Créer un compte" : "Déjà membre ? Se connecter"}
+          </button>
+
+          <button 
+            onClick={() => showResetConfirm ? resetDB() : setShowResetConfirm(true)}
+            className={`text-[9px] font-black uppercase tracking-widest mt-4 py-2 px-4 rounded-xl transition-all ${
+              showResetConfirm ? 'bg-red-600 text-white' : 'text-slate-300 hover:text-red-400'
+            }`}
+          >
+            {showResetConfirm ? 'Confirmer Reset DB' : 'Reset Database'}
           </button>
         </div>
       </div>

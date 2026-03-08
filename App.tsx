@@ -23,8 +23,9 @@ interface AppContextType {
   currentMealPlan: DayPlan[] | null;
   setCurrentMealPlan: (plan: DayPlan[] | null) => void;
   savedPlans: SavedPlan[];
-  saveCurrentPlan: (name: string) => void;
+  saveCurrentPlan: (name: string, week: string) => void;
   setView: (v: any) => void;
+  resetDB: () => void;
 }
 
 const AppContext = createContext<AppContextType | null>(null);
@@ -193,6 +194,15 @@ const App: React.FC = () => {
     setView('landing');
   };
 
+  const resetDB = () => {
+    localStorage.removeItem('nutriplan_users_db');
+    localStorage.removeItem('nutriplan_current_plan');
+    localStorage.removeItem('nutriplan_saved_plans');
+    localStorage.removeItem('nutriplan_auth');
+    localStorage.removeItem('nutriplan_last_servings');
+    window.location.reload();
+  };
+
   const updateUser = (data: Partial<User>) => {
     if (authState.user) {
       const updatedUser = { ...authState.user!, ...data };
@@ -203,12 +213,13 @@ const App: React.FC = () => {
     }
   };
 
-  const saveCurrentPlan = (name: string) => {
+  const saveCurrentPlan = (name: string, week: string) => {
     if (!currentMealPlan || !authState.user) return;
     const lastServings = parseInt(localStorage.getItem('nutriplan_last_servings') || '2');
     const newSavedPlan: SavedPlan = {
       id: Math.random().toString(36).substr(2, 9),
       name: name || `Menu du ${new Date().toLocaleDateString()}`,
+      week: week || new Date().toISOString().substring(0, 10),
       date: new Date().toISOString(),
       plan: currentMealPlan,
       diet: authState.user.diet,
@@ -237,7 +248,7 @@ const App: React.FC = () => {
     <AppContext.Provider value={{ 
       authState, login, signup, handleGoogleSuccess, logout, updateUser, 
       currentMealPlan, setCurrentMealPlan, 
-      savedPlans, saveCurrentPlan, setView
+      savedPlans, saveCurrentPlan, setView, resetDB
     }}>
       <div className="min-h-screen flex flex-col bg-slate-50">
         {(authState.isAuthenticated || view !== 'landing') && view !== 'onboarding' && view !== 'auth' && <Navbar currentView={view} setView={setView} />}

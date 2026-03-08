@@ -14,7 +14,6 @@ const MEAL_TYPES = [
 const CreatePlan: React.FC = () => {
   const { authState, setCurrentMealPlan, setView } = useApp();
   const [loading, setLoading] = useState(false);
-  const [servings, setServings] = useState(2);
   const [selectedDays, setSelectedDays] = useState<string[]>(DAYS_OF_WEEK);
   const [dayMeals, setDayMeals] = useState<Record<string, string[]>>(() => {
     const initial: Record<string, string[]> = {};
@@ -23,7 +22,6 @@ const CreatePlan: React.FC = () => {
     });
     return initial;
   });
-  const [defaultTakeAway, setDefaultTakeAway] = useState(true);
   const [instructions, setInstructions] = useState('');
 
   const toggleDay = (day: string) => {
@@ -59,7 +57,7 @@ const CreatePlan: React.FC = () => {
 
     setLoading(true);
     try {
-      const data = await generateMealPlan(authState.user.diet, authState.user.allergies, servings, selectedDays, fullInstructions);
+      const data = await generateMealPlan(authState.user.diet, authState.user.allergies, selectedDays, fullInstructions);
       
       // Initialize data and mark unselected meals as not selected
       const initializedData = data.map(day => {
@@ -75,7 +73,7 @@ const CreatePlan: React.FC = () => {
             lunch: { 
               ...day.meals.lunch, 
               isSelected: selectedForThisDay.includes('lunch'), 
-              isTakeAway: defaultTakeAway 
+              isTakeAway: false 
             },
             dinner: { 
               ...day.meals.dinner, 
@@ -87,7 +85,6 @@ const CreatePlan: React.FC = () => {
       });
 
       setCurrentMealPlan(initializedData);
-      localStorage.setItem('nutriplan_last_servings', servings.toString());
       setView('calendar');
     } catch (err) {
       console.error("Erreur génération:", err);
@@ -165,25 +162,12 @@ const CreatePlan: React.FC = () => {
               </div>
             )}
 
-            <div className="grid md:grid-cols-2 gap-8">
-              <div className="bg-slate-50/50 p-6 rounded-[32px] border border-slate-100 text-center">
-                <label className="block text-[10px] font-black text-slate-400 uppercase mb-4 tracking-widest">Nombre de convives</label>
-                <div className="flex items-center justify-center gap-6">
-                  <button onClick={() => setServings(Math.max(1, servings - 1))} className="w-10 h-10 bg-white rounded-full shadow-sm font-black text-slate-400 hover:text-emerald-600 transition-colors">-</button>
-                  <span className="text-4xl font-black text-slate-900">{servings}</span>
-                  <button onClick={() => setServings(Math.min(10, servings + 1))} className="w-10 h-10 bg-white rounded-full shadow-sm font-black text-slate-400 hover:text-emerald-600 transition-colors">+</button>
-                </div>
+            <div className="grid md:grid-cols-1 gap-8">
+              <div className="bg-emerald-50/50 p-8 rounded-[32px] border border-emerald-100 text-center">
+                <p className="text-sm font-medium text-emerald-800">
+                  L'IA va générer vos recettes. Vous pourrez ajuster le nombre de portions directement dans le calendrier pour chaque repas.
+                </p>
               </div>
-              <button 
-                onClick={() => setDefaultTakeAway(!defaultTakeAway)}
-                className={`p-6 rounded-[32px] border-2 flex flex-col items-center justify-center transition-all ${
-                  defaultTakeAway ? 'border-amber-500 bg-amber-50 text-amber-700 shadow-lg shadow-amber-100' : 'border-slate-100 bg-white text-slate-300'
-                }`}
-              >
-                <span className="text-3xl mb-1">{defaultTakeAway ? '🥡' : '🍽️'}</span>
-                <span className="text-[10px] font-black uppercase tracking-widest">Le midi à emporter</span>
-                <span className="text-[9px] font-bold mt-1 opacity-60 italic">{defaultTakeAway ? 'Configuré par défaut' : 'Cuisiné maison'}</span>
-              </button>
             </div>
 
             <div>

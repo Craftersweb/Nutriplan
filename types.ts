@@ -43,6 +43,7 @@ export interface DayPlan {
 export interface SavedPlan {
   id: string;
   name: string;
+  week: string; // e.g., "2024-W10"
   date: string;
   plan: DayPlan[];
   diet: DietPreference;

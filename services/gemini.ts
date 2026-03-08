@@ -48,12 +48,10 @@ const MEAL_PLAN_SCHEMA = {
 export const generateMealPlan = async (
   diet: DietPreference, 
   allergies: string[], 
-  servings: number, 
   days: string[], 
   instructions?: string
 ): Promise<DayPlan[]> => {
   try {
-    // Fix: Use direct process.env.API_KEY initialization as required by guidelines
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     const customPrompt = instructions ? `Prend en compte ces instructions : "${instructions}".` : "";
     
@@ -61,11 +59,9 @@ export const generateMealPlan = async (
       model: "gemini-3-pro-preview",
       contents: `Génère un menu pour les jours suivants : ${days.join(', ')}.
                 Régime : ${diet}. 
-                Nombre de personnes : ${servings}. 
                 Allergies : ${allergies.join(', ') || 'Aucune'}. 
                 ${customPrompt}
-                IMPORTANT: Calcule les quantités pour exactement ${servings} personnes.
-                Chaque jour doit avoir Petit-déjeuner, Déjeuner et Dîner.
+                IMPORTANT: Chaque jour doit avoir Petit-déjeuner, Déjeuner et Dîner.
                 Ajoute une URL d'image Unsplash pertinente (ex: https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400).`,
       config: {
         responseMimeType: "application/json",
@@ -73,7 +69,6 @@ export const generateMealPlan = async (
       }
     });
 
-    // Fix: Access response.text property directly (not as a method)
     const text = response.text;
     if (!text) return [];
     return JSON.parse(text);
@@ -83,13 +78,14 @@ export const generateMealPlan = async (
   }
 };
 
-export const generateShoppingList = async (mealPlan: any[]): Promise<ShoppingListItem[]> => {
+export const generateShoppingList = async (mealPlan: DayPlan[]): Promise<ShoppingListItem[]> => {
   try {
-    // Fix: Use direct process.env.API_KEY initialization as required by guidelines
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
-      contents: `Crée une liste de courses consolidée pour ces repas : ${JSON.stringify(mealPlan)}`,
+      contents: `Crée une liste de courses consolidée pour ce planning de repas : ${JSON.stringify(mealPlan)}.
+                La liste doit être organisée JOUR PAR JOUR et REPAS PAR REPAS.
+                Pour chaque ingrédient, précise à quel jour et quel repas il appartient dans le champ 'category' (ex: "Lundi - Petit-déjeuner").`,
       config: {
         responseMimeType: "application/json",
         responseSchema: {
@@ -108,7 +104,6 @@ export const generateShoppingList = async (mealPlan: any[]): Promise<ShoppingLis
       }
     });
 
-    // Fix: Access response.text property directly (not as a method)
     const text = response.text;
     if (!text) return [];
     return JSON.parse(text);
